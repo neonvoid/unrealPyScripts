@@ -78,3 +78,37 @@ def spawnSK(nums):
         camera_binding_id.set_editor_property('Guid',binding.get_id())
         camera_cut_section.set_editor_property('CameraBindingID',camera_binding_id)
         i+=1
+
+
+def createSeq():
+    basePath = '/Game/Generics/'
+    anim_path = unreal.load_asset("/Game/Characters/Mannequins/Animations/Manny/MM_Run_Fwd")
+    manny = unreal.EditorAssetLibrary.load_asset('/Game/Characters/Mannequins/Meshes/SKM_Manny')
+    location = unreal.Vector(0,0,0)
+    rotation = unreal.Rotator(0,0,0)
+    mesh = unreal.EditorLevelLibrary.spawn_actor_from_object(manny,location,rotation,False)
+
+    
+    sequencer = unreal.AssetToolsHelpers.get_asset_tools().create_asset(asset_name='simpleSequencer',
+    package_path=basePath,asset_class=unreal.LevelSequence,factory=unreal.LevelSequenceFactoryNew())
+    location = unreal.Vector(0,0,0)
+    rotation = unreal.Rotator(0,0,0)
+    unreal.EditorLevelLibrary.spawn_actor_from_object(sequencer,location,rotation,False)
+
+    actor_binding = sequencer.add_possessable(mesh)
+    anim_track = actor_binding.add_track(unreal.MovieSceneSkeletalAnimationTrack)
+    anim_section = anim_track.add_section()
+    anim_section.params.animation=anim_path
+    anim_section.set_range(0, 1000)
+
+    camera_cut_track = sequencer.add_master_track(unreal.MovieSceneCameraCutTrack)
+    camera_cut_section = camera_cut_track.add_section()
+    camera_cut_section.set_start_frame(0)
+    camera_cut_section.set_end_frame(10)
+    
+
+def test():
+    anim_path = unreal.load_asset("/Game/Characters/Mannequins/Animations/Manny/MM_Run_Fwd")
+    print(anim_path.get_editor_property('sequence_length'))
+
+
