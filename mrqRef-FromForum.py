@@ -23,9 +23,9 @@ job = q.allocate_new_job()
 job.set_editor_property('map',unreal.SoftObjectPath(umap))
 job.set_editor_property('sequence',unreal.SoftObjectPath(level_sequence))
 
-job2 = q.allocate_new_job()
-job2.set_editor_property('map',unreal.SoftObjectPath(umap))
-job2.set_editor_property('sequence',unreal.SoftObjectPath(level_seq2))
+# job2 = q.allocate_new_job()
+# job2.set_editor_property('map',unreal.SoftObjectPath(umap))
+# job2.set_editor_property('sequence',unreal.SoftObjectPath(level_seq2))
 
 
 c=job.get_configuration()
@@ -34,11 +34,11 @@ output_setting=c.find_or_add_setting_by_class(unreal.MoviePipelineOutputSetting)
 output_setting.output_directory=unreal.DirectoryPath(outdir1)
 png_setting=c.find_or_add_setting_by_class(unreal.MoviePipelineImageSequenceOutput_PNG)
 
-d=job2.get_configuration()
-render_pass_settings=d.find_or_add_setting_by_class(unreal.MoviePipelineDeferredPassBase)
-output_setting=d.find_or_add_setting_by_class(unreal.MoviePipelineOutputSetting)
-output_setting.output_directory=unreal.DirectoryPath(outdir2)
-png_setting=d.find_or_add_setting_by_class(unreal.MoviePipelineImageSequenceOutput_PNG)
+# d=job2.get_configuration()
+# render_pass_settings=d.find_or_add_setting_by_class(unreal.MoviePipelineDeferredPassBase)
+# output_setting=d.find_or_add_setting_by_class(unreal.MoviePipelineOutputSetting)
+# output_setting.output_directory=unreal.DirectoryPath(outdir2)
+# png_setting=d.find_or_add_setting_by_class(unreal.MoviePipelineImageSequenceOutput_PNG)
 
 
 error_callback=unreal.OnMoviePipelineExecutorErrored()

@@ -1,5 +1,6 @@
 import unreal
 import random 
+import time
 #using this file to review and practice first
 #spawn just 1 sk and 1 cam, no need for fancy shit
 #create a sequencer
@@ -91,10 +92,10 @@ def render(sequencer):
         capture_settings.get_editor_property('settings').set_editor_property('output_format','{world}{sequence}')
 
         unreal.SequencerTools.render_movie(capture_settings,unreal.OnRenderMovieStopped())
-
+        
 
 def main():
-    spawnSK(5)
+    spawnSK(3)
     meshes,cams = spawnCam()
     sequence_path = createSequencer(meshes,cams)
     render(sequence_path)
