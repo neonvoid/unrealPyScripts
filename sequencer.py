@@ -1,6 +1,6 @@
 import unreal
 import random 
-import time
+from itertools import cycle
 #using this file to review and practice first
 #spawn just 1 sk and 1 cam, no need for fancy shit
 #create a sequencer
@@ -12,11 +12,15 @@ import time
 ELL = unreal.EditorLevelLibrary()
 EAL = unreal.EditorAssetLibrary()
 def spawnSK(nums):
-    SKfilePath = EAL.load_asset('/Game/Characters/Mannequins/Meshes/SKM_Manny_Simple')
+    SK2filePath = EAL.load_asset('/Game/Characters/Mannequins/Meshes/SKM_Manny_Simple')
+    SKfilePath = EAL.load_asset('/Game/Characters/Mannequins/Meshes/SKM_Quinn_Simple')
     for i in range(nums):
         location=unreal.Vector(random.randrange(-1000,1000),random.randrange(-1000,1000),0.0)
         rotation=unreal.Rotator(0.0,0.0,0.0)
-        ELL.spawn_actor_from_object(SKfilePath,location,rotation)
+        if i%2==0:
+            ELL.spawn_actor_from_object(SKfilePath,location,rotation)
+        else:
+            ELL.spawn_actor_from_object(SK2filePath,location,rotation)
 
 def spawnCam():
     cam = unreal.CineCameraActor().get_class()
@@ -37,12 +41,20 @@ def spawnCam():
 
 
 def createSequencer(meshes, cams):
-    sequenceName = 'lvl_sequence' + '%d'
-    i=0
+
+    anim_assets= [EAL.load_asset("/Game/Characters/Mannequins/Animations/Manny/MM_Jump"),
+                  EAL.load_asset('/Game/Characters/Mannequins/Animations/Manny/MM_Run_Fwd'),
+                  EAL.load_asset('/Game/Characters/Mannequins/Animations/Manny/MM_Idle')]
+    
+    cycler=cycle(anim_assets) 
+    
+    sequenceName = 'lvl_sequence' + '%d' +'%s'
     sequencerPaths = []
-    for mesh,cam in zip(meshes,cams):
+    sequencerWorlds = []
+    for i,(mesh,cam) in enumerate(zip(meshes,cams)):
+        currWorld = mesh.get_world().get_name()
         assetTools = unreal.AssetToolsHelpers.get_asset_tools()
-        sequence = assetTools.create_asset(asset_name=sequenceName%(i),
+        sequence = assetTools.create_asset(asset_name=sequenceName%(i,currWorld),
                                             package_path='/Game/sequences/',
                                             asset_class=unreal.LevelSequence,
                                             factory=unreal.LevelSequenceFactoryNew())
@@ -54,14 +66,14 @@ def createSequencer(meshes, cams):
         #adding section to track to manipulate range and params
         anim_section = anim_track.add_section()
         start_frame = sequence.get_playback_start()
+        sequence_end = sequence.set_playback_end(50)
         end_frame = sequence.get_playback_end()
         #adding an anim to the track
         anim_section.set_range(start_frame,end_frame)
-        anim_asset = EAL.load_asset("/Game/Characters/Mannequins/Animations/Manny/MM_Jump")
-        anim_section.params.animation = anim_asset
+
+        anim_section.params.animation = next(cycler)
         #add camera cuts master track
         cameraCutsTrack = sequence.add_master_track(unreal.MovieSceneCameraCutTrack)
-        print(cameraCutsTrack)
         cameraCutsSection = cameraCutsTrack.add_section()
         cameraCutsSection.set_range(start_frame,end_frame)
         #adding camera 
@@ -69,9 +81,9 @@ def createSequencer(meshes, cams):
         camera_binding_id.set_editor_property('guid',camera_binding.get_id())
         cameraCutsSection.set_camera_binding_id(camera_binding_id)
         sequencerPaths.append(sequence.get_path_name())
-        i+=1
+        sequencerWorlds.append(currWorld)
 
-    return sequencerPaths
+    return sequencerPaths, sequencerWorlds
 
     #to try to straighten the above code out a little bit
     #we created a level sequence object called sequence
@@ -93,11 +105,12 @@ def render(sequencer):
 
         unreal.SequencerTools.render_movie(capture_settings,unreal.OnRenderMovieStopped())
         
+def levelTravel():
+    ELL.save_current_level()
+    ELL.load_level('/Game/pink')
 
-def main():
-    spawnSK(3)
+def main(params):
+    spawnSK(params)
     meshes,cams = spawnCam()
-    sequence_path = createSequencer(meshes,cams)
-    render(sequence_path)
-
+    return createSequencer(meshes,cams)
 

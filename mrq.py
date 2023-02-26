@@ -1,14 +1,31 @@
 import unreal
 import os 
+import sequencer
+import random
 
-outdir1=os.path.abspath(os.path.join(unreal.Paths().project_dir(),'out1'))
-outdir2=os.path.abspath(os.path.join(unreal.Paths().project_dir(),'out2'))
+pathVar = []
+worldVar = []
 
-def individJobFinishedCallback(params,sucess):
-    print(params)
-    print(sucess)
+def create(num):
+    global pathVar
+    global worldVar
+    pathOut, worldOut = sequencer.main(num)
+    pathVar.append(pathOut)
+    worldVar.append(worldOut)
 
-def mvqDocument():
+#apparently we keep this alive so python doesn't delete it
+executor = None
+spawnedLight = None
+
+outputDir = os.path.abspath(os.path.join(unreal.Paths().project_dir(),'out'+'%d'))
+
+def OnIndividualJobFinishedCallback(params,success):
+    global spawnedLight
+    print('one job completed')
+    spawnedLight.set_light_color((random.uniform(0,1),random.uniform(0,1),random.uniform(0,1),1))
+
+
+def mvqDocument(paths,worlds):
     subsystem = unreal.get_editor_subsystem(unreal.MoviePipelineQueueSubsystem)
     queue = subsystem.get_queue()
     # print(queue)
@@ -18,39 +35,39 @@ def mvqDocument():
         for job in queue.get_jobs():
             queue.delete_job(job)
 
-    map = '/Game/PythonEmptyTest'
-    level_sequence='/Game/sequences/lvl_sequence0'
+    for i,(path,world) in enumerate(zip(paths,worlds)):
+        #print(f'path:{path}, world:{worlds}')
+        job = queue.allocate_new_job()
+        job.set_editor_property('map',unreal.SoftObjectPath("/Game/"+world))
+        job.set_editor_property('sequence',unreal.SoftObjectPath(path))
 
-    map2 = '/Game/pink'
-    level2_sequence= '/Game/sequences/pinkTest'
+        jobConfig = job.get_configuration()
+        render_pass = jobConfig.find_or_add_setting_by_class(unreal.MoviePipelineDeferredPassBase)
+        output_setting = jobConfig.find_or_add_setting_by_class(unreal.MoviePipelineOutputSetting)
+        output_setting.output_directory = unreal.DirectoryPath(outputDir%(i))
+        png_output = jobConfig.find_or_add_setting_by_class(unreal.MoviePipelineImageSequenceOutput_PNG)
 
-    job1 = queue.allocate_new_job()
-    job1.set_editor_property('map',unreal.SoftObjectPath(map))
-    job1.set_editor_property('sequence',unreal.SoftObjectPath(level_sequence))
+    global spawnedLight
+    spawnedLight = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.PointLight,(0,0,100))
+    spawnedLight.set_brightness(5000)
+    spawnedLight.set_light_color((0,0,1,1))
 
-    job1config = job1.get_configuration()
-    render_pass = job1config.find_or_add_setting_by_class(unreal.MoviePipelineDeferredPassBase)
-    output_setting = job1config.find_or_add_setting_by_class(unreal.MoviePipelineOutputSetting)
-    output_setting.output_directory = unreal.DirectoryPath(outdir1)
-    png_output = job1config.find_or_add_setting_by_class(unreal.MoviePipelineImageSequenceOutput_PNG)
+    global executor
+    executor = unreal.MoviePipelinePIEExecutor()
+    callback = unreal.OnMoviePipelineIndividualJobFinished()
+    callback.add_callable(OnIndividualJobFinishedCallback)
+    executor.set_editor_property('on_individual_job_finished_delegate',callback)
+    subsystem.render_queue_with_executor_instance(executor)
 
-    job2 = queue.duplicate_job(queue.get_jobs()[0])
-    job2.set_editor_property('map',unreal.SoftObjectPath(map2))
-    job2.set_editor_property('sequence',unreal.SoftObjectPath(level2_sequence))
-    job2config = job2.get_configuration()
-    output_setting = job2config.find_or_add_setting_by_class(unreal.MoviePipelineOutputSetting)
-    output_setting.output_directory = unreal.DirectoryPath(outdir2)
+    
+    # what are soft object paths
+    # look through MoviePipelineQueueSubsystem
+    # get_editor_subsystem and get_queue
+    # OnMoviePipelineExecutorFinished
 
-    #executor = unreal.MoviePipelinePIEExecutor()
-    #finished_callback = unreal.OnMoviePipelineExecutorFinished()
-    #finished_callback.add_callable(individJobFinishedCallback)
-    #executor.on_executor_finished_delegate.add_callable_unique(queueFinishedCallback)
-    #executor.set_editor_property('on_executor_finished_delegate', finished_callback)
+def render():
+    print(worldVar)
+    renderWorldVar = worldVar[0]+worldVar[1]
+    renderPathVar = pathVar[0]+pathVar[1]
+    mvqDocument(renderPathVar,renderWorldVar)
 
-    subsystem.render_queue_with_executor(unreal.MoviePipelinePIEExecutor)
-
-
-    #what are soft object paths
-    #look through MoviePipelineQueueSubsystem
-    #get_editor_subsystem and get_queue
-    #OnMoviePipelineExecutorFinished
