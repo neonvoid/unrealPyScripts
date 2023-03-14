@@ -6,6 +6,7 @@ import random
 pathVar = []
 worldVar = []
 
+
 def create(num):
     global pathVar
     global worldVar
@@ -16,17 +17,19 @@ def create(num):
 #apparently we keep this alive so python doesn't delete it
 executor = None
 spawnedLight = None
-
-outputDir = os.path.abspath(os.path.join(unreal.Paths().project_dir(),'out'+'%d'))
+fog = None
+outputDir = os.path.abspath(os.path.join(unreal.Paths().project_dir(),'0'))
 
 def OnIndividualJobFinishedCallback(params,success):
-    global spawnedLight
+    global fog
     print('one job completed')
-    spawnedLight.set_light_color((random.uniform(0,1),random.uniform(0,1),random.uniform(0,1),1))
+    fog[0].component.set_fog_inscattering_color((random.uniform(0,10),random.uniform(0,10),random.uniform(0,10)))
+    #spawnedLight.set_light_color((random.uniform(0,1),random.uniform(0,1),random.uniform(0,1),1))
 
 
 def mvqDocument(paths,worlds):
     subsystem = unreal.get_editor_subsystem(unreal.MoviePipelineQueueSubsystem)
+    ELL = unreal.EditorLevelLibrary()
     queue = subsystem.get_queue()
     # print(queue)
     # print(queue.get_jobs())
@@ -44,13 +47,21 @@ def mvqDocument(paths,worlds):
         jobConfig = job.get_configuration()
         render_pass = jobConfig.find_or_add_setting_by_class(unreal.MoviePipelineDeferredPassBase)
         output_setting = jobConfig.find_or_add_setting_by_class(unreal.MoviePipelineOutputSetting)
-        output_setting.output_directory = unreal.DirectoryPath(outputDir%(i))
+        output_setting.output_directory = unreal.DirectoryPath(outputDir)
+        output_setting.output_resolution = (100,100)
         png_output = jobConfig.find_or_add_setting_by_class(unreal.MoviePipelineImageSequenceOutput_PNG)
 
     global spawnedLight
-    spawnedLight = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.PointLight,(0,0,100))
-    spawnedLight.set_brightness(5000)
-    spawnedLight.set_light_color((0,0,1,1))
+    global fog
+    #spawnedLight = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.PointLight,(0,0,100))
+    # spawnedLight.set_brightness(5000)
+    # spawnedLight.set_light_color((0,0,1,1))
+
+    allactors = ELL.get_all_level_actors()
+    fog = []
+    for actor in allactors:
+        if actor.get_class().get_name() == 'ExponentialHeightFog':
+            fog.append(actor)
 
     global executor
     executor = unreal.MoviePipelinePIEExecutor()
@@ -71,3 +82,11 @@ def render():
     renderPathVar = pathVar[0]+pathVar[1]
     mvqDocument(renderPathVar,renderWorldVar)
 
+def fogColorChangeTest():
+    ELL = unreal.EditorLevelLibrary()
+    allactors = ELL.get_all_level_actors()
+    fog = []
+    for actor in allactors:
+        if actor.get_class().get_name() == 'ExponentialHeightFog':
+            fog.append(actor)
+    fog[0].component.set_fog_inscattering_color((random.uniform(0,1),random.uniform(0,1),random.uniform(0,1)))

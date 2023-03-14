@@ -1,0 +1,23 @@
+Shot IDs first CNN trial 1:
+
+Default:
+	
+	closeup [0]: 
+		location = actor.get_actor_location() + (actor.get_actor_right_vector()*200)
+        location.z = bounds[1].z*2-random.randrange(20,45)
+		location.x += random.randrange(-20,20)
+		rotation = unreal.Rotator(0,0,-90)
+		
+	
+	medium [1]:
+		location = actor.get_actor_location() + (actor.get_actor_right_vector()*1000)
+        location.z = bounds[1].z*2-random.randrange(20,45)
+        location.x += random.randrange(-50,50)
+        rotation = unreal.Rotator(0,0,-90)
+		
+	wide [2]:
+		location = actor.get_actor_location() + (actor.get_actor_right_vector()*2000)
+        location.z = bounds[1].z*2-random.randrange(20,45)
+        location.x += random.randrange(-100,100)
+        rotation = unreal.Rotator(0,0,-90)
+	
