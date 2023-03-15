@@ -2,6 +2,7 @@ import unreal
 import random 
 import math
 from itertools import cycle
+import csv
 
 ELL = unreal.EditorLevelLibrary()
 EAL = unreal.EditorAssetLibrary()
@@ -88,7 +89,9 @@ def createSequencer(nums):
                                             package_path='/Game/sequences/',
                                             asset_class=unreal.LevelSequence,
                                             factory=unreal.LevelSequenceFactoryNew())
-        
+        randStart = random.randrange(40,150)
+        sequence.set_playback_start(randStart)
+        sequence.set_playback_end(randStart+50)
         #adding the mesh into the sequencer
         mesh_binding = sequence.add_spawnable_from_instance(next(mhCycler))
         alex_binding = sequence.add_possessable(alexspawn)
@@ -115,8 +118,7 @@ def createSequencer(nums):
         #adding section to track to manipulate range and params
         anim_section = anim_track.add_section()
         anim_section2 = anim_track2.add_section()
-        start_frame = sequence.get_playback_start()-60
-        sequence_end = sequence.set_playback_end(200)
+        start_frame = 0#sequence.get_playback_start()-random.randrange(50,70)
         end_frame = sequence.get_playback_end()
         #adding an anim to the track
         anim_section.set_range(start_frame,end_frame)
@@ -223,6 +225,21 @@ def alignTracking():
         trackingSettings.set_editor_property("actor_to_track",attach)
         trackingSettings.set_editor_property('look_at_tracking_interp_speed',2)
         cam.lookat_tracking_settings = trackingSettings
+
+def CameraPosDump():
+    AllCams= unreal.EditorLevelLibrary.get_all_level_actors()
+    file =open('D:\python_unreal\ThesisTestsStuff\datadump.csv','a',newline='')
+    writer = csv.writer(file)
+    camloc=[]
+    for cam in AllCams:
+        if cam.get_class().get_name()=='CineCameraActor':
+            loc= cam.get_actor_location().to_tuple()
+            tempList = [loc[0],loc[1],loc[2]]
+            camloc.append(tempList)
+    writer.writerows(camloc)
+    file.close()
+
+
 
 def seqCheck():
     # seq = unreal.EditorAssetLibrary.load_asset('/Game/sequences/lvl_sequence0PythonEmptyTest')

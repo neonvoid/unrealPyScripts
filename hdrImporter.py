@@ -2,8 +2,8 @@ import unreal
 import skyboxAPI
 import os
 
-def runSkybox(prompt):
-    filepath = skyboxAPI.main(prompt)
+def runSkybox(prompt,num):
+    filepath = skyboxAPI.main(prompt,num)
     return filepath
 
 def prepImport(filepath, callback):
@@ -42,7 +42,7 @@ def setHDRI(ID):
     print(hdr.get_editor_property('Cubemap'))
     hdr.set_editor_property('Cubemap',hdriFilePath)
 
-def main(prompt):
+def main(prompt,num):
     total_frames = 1
     text_label = 'calling skybox api and generating'
     with unreal.ScopedSlowTask(total_frames,text_label, enabled=True) as slow:
@@ -50,5 +50,5 @@ def main(prompt):
         for i in range(total_frames):
             slow.enter_progress_frame(work=1,desc="downloading")
 
-            filepath = runSkybox(prompt)
+            filepath = runSkybox(prompt,num)
             prepImport(filepath,setHDRI)
