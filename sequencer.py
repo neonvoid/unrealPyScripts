@@ -1,14 +1,7 @@
 import unreal
 import random 
-import metahumanAnims
+import math
 from itertools import cycle
-#using this file to review and practice first
-#spawn just 1 sk and 1 cam, no need for fancy shit
-#create a sequencer
-#add both the sk and cam into the sequencer
-#create a camera cuts master track
-#create an anim track
-#try to render it out I guess
 
 ELL = unreal.EditorLevelLibrary()
 EAL = unreal.EditorAssetLibrary()
@@ -69,15 +62,20 @@ def createSequencer(nums):
     mhCycler = cycle(mhpaths)
 
     alex = EAL.load_asset('/Game/anims/alexwboxes')
+    cubeAlex = EAL.load_blueprint_class('/Game/anims/BP_cubeAlex')
     alexspawn = ELL.spawn_actor_from_object(alex,location=unreal.Vector(0,0,0),rotation=unreal.Rotator(0,0,0))
-
-    #anim_assets= metahumanAnims.anim_assets
+    alexspawn2 = ELL.spawn_actor_from_class(cubeAlex,location=unreal.Vector(0,0,0),rotation=unreal.Rotator(0,0,0))
+    attachCube = EAL.load_asset('/Game/anims/attachCube')
+    attachCubeSpawn = ELL.spawn_actor_from_object(attachCube,location=unreal.Vector(0,0,0),rotation=unreal.Rotator(0,0,0))
+    attachCubeSpawn.set_mobility(unreal.ComponentMobility.MOVABLE)
+    # attachCubeSpawn.attach_to_actor(alexspawn2,'Alex_Neck',unreal.AttachmentRule.SNAP_TO_TARGET,unreal.AttachmentRule.SNAP_TO_TARGET,unreal.AttachmentRule.KEEP_RELATIVE,False)
+    # #anim_assets= metahumanAnims.anim_assets
     #cycler=cycle(anim_assets) 
 
-    cam = unreal.CineCameraActor().get_class()
-    camLocation = unreal.Vector(0,300,130)
-    camRotation = unreal.Rotator(0,0,-90)
-    camSpawn = ELL.spawn_actor_from_class(cam,camLocation,camRotation,transient=False)
+    #cam = unreal.CineCameraActor().get_class()
+    # camLocation = unreal.Vector(0,300,130)
+    # camRotation = unreal.Rotator(0,0,-90)
+    # camSpawn = ELL.spawn_actor_from_class(cam,camLocation,camRotation,transient=False)
     
     sequenceName = 'lvl_sequence' + '%d' +'%s'
     sequencerPaths = []
@@ -94,27 +92,39 @@ def createSequencer(nums):
         #adding the mesh into the sequencer
         mesh_binding = sequence.add_spawnable_from_instance(next(mhCycler))
         alex_binding = sequence.add_possessable(alexspawn)
-
-        camLoc = camSpawn.get_actor_location()
-        camLoc.z += random.randrange(-55,55)
-        camLoc.x += random.randrange(-35,35)
         
-        camSpawnLoop = ELL.spawn_actor_from_object(camSpawn,camLoc,camRotation)
-        
+        alex_bindingTrack = sequence.add_possessable(alexspawn2)
+        cubeSpawnTrack = sequence.add_possessable(attachCubeSpawn)
 
-        camera_binding = sequence.add_possessable(camSpawnLoop)
+        cubeAttachTrack = cubeSpawnTrack.add_track(unreal.MovieScene3DAttachTrack)
+        cubeAttachSection = cubeAttachTrack.add_section()
+        cubeAttachSection.set_editor_property('constraint_binding_id',alex_bindingTrack.get_binding_id())
+        cubeAttachSection.set_editor_property('attach_component_name',"SkeletalMesh")
+        cubeAttachSection.set_editor_property('attach_socket_name',"Alex_neck")
+        # camLoc = camSpawn.get_actor_location()
+        # camLoc.z += random.randrange(-55,55)
+        # camLoc.x += random.randrange(-35,35)
+        # camSpawnLoop = ELL.spawn_actor_from_object(camSpawn,camLoc,camRotation)
+        camSpawn = randomCircleSpawn(300)
+        camera_binding = sequence.add_possessable(camSpawn)
         alex_binding.set_parent(mesh_binding)
+
         #adding a animtrack
         anim_track = mesh_binding.add_track(unreal.MovieSceneSkeletalAnimationTrack)
+        anim_track2 = alex_bindingTrack.add_track(unreal.MovieSceneSkeletalAnimationTrack)
         #adding section to track to manipulate range and params
         anim_section = anim_track.add_section()
+        anim_section2 = anim_track2.add_section()
         start_frame = sequence.get_playback_start()-60
         sequence_end = sequence.set_playback_end(200)
         end_frame = sequence.get_playback_end()
         #adding an anim to the track
         anim_section.set_range(start_frame,end_frame)
-
-        anim_section.params.animation = assetWalk()
+        anim_section2.set_range(start_frame,end_frame)
+        cubeAttachSection.set_range(start_frame,end_frame)
+        animforthisloop = assetWalk()
+        anim_section.params.animation = animforthisloop
+        anim_section2.params.animation = animforthisloop
         #add camera cuts master track
         cameraCutsTrack = sequence.add_master_track(unreal.MovieSceneCameraCutTrack)
         cameraCutsSection = cameraCutsTrack.add_section()
@@ -123,6 +133,7 @@ def createSequencer(nums):
         camera_binding_id = unreal.MovieSceneObjectBindingID()
         camera_binding_id.set_editor_property('guid',camera_binding.get_id())
         cameraCutsSection.set_camera_binding_id(camera_binding_id)
+
         sequencerPaths.append(sequence.get_path_name())
         sequencerWorlds.append(currWorld)
 
@@ -164,6 +175,81 @@ def main(params):
     seqpaths, seqworlds = createSequencer(params)
     return seqpaths,seqworlds
 
+
+def assetWalk():
+    asset_reg = unreal.AssetRegistryHelpers.get_asset_registry()
+    all_anims = asset_reg.get_assets_by_path('/Game/anims/anims')
+    randomElement = random.choice(all_anims)
+    split_path = randomElement.get_full_name().split('.')
+    anim_path = "/"+split_path[1].split('/',1)[1]
+    anim_path = unreal.EditorAssetLibrary.load_asset(anim_path)
+    return anim_path
+
+def randomCircleSpawn(distance_offset):
+    cam = unreal.CineCameraActor()
+    vertCount = 1000
+    step=2*math.pi/vertCount
+    theta = random.randrange(0,vertCount)
+    theta *= step
+    x = math.cos(theta) * distance_offset
+    y = math.sin(theta) * distance_offset
+
+    #centerStage = unreal.Vector(0,0,0)
+    camLoc=unreal.Vector(x,y,random.randrange(100,170))
+    camLoc.y += random.randrange(-50,50)
+    camLoc.x += random.randrange(-35,35)
+    camRot = unreal.Rotator(0,0,0)
+    #camRot = ueMath.find_look_at_rotation(camLoc,centerStage)
+    #camRot.pitch = 0
+    #print(cam.get_editor_property('lookat_tracking_settings'))
+    #print(type(actor))
+    #cam.set_editor_property('lookat_tracking_settings',trackingSettings)
+    camSpawn = unreal.EditorLevelLibrary().spawn_actor_from_object(cam,camLoc,camRot)
+    return camSpawn
+
+def alignTracking():
+    allCams = []
+    attach = None
+    allactors = unreal.EditorLevelLibrary().get_all_level_actors()
+    for actor in allactors:
+        if actor.get_class().get_name() == 'CineCameraActor':
+            allCams.append(actor)
+        elif actor.get_name()=='StaticMeshActor_0':
+            attach = actor
+    
+    for cam in allCams:
+        trackingSettings = unreal.CameraLookatTrackingSettings()
+        trackingSettings.set_editor_property('enable_look_at_tracking',True)
+        trackingSettings.set_editor_property("actor_to_track",attach)
+        trackingSettings.set_editor_property('look_at_tracking_interp_speed',2)
+        cam.lookat_tracking_settings = trackingSettings
+
+def seqCheck():
+    # seq = unreal.EditorAssetLibrary.load_asset('/Game/sequences/lvl_sequence0PythonEmptyTest')
+    # seqBindings = seq.get_bindings()
+    # for b in seqBindings:
+    #     print(b.get_display_name())
+    # print(seqBindings[4].get_tracks()[0].get_sections())
+    # print(dir(seqBindings[4].get_tracks()[1].get_sections()[0]))
+    #print(seqBindings[3].get_tracks()[0].get_sections()[0].get_editor_property('section_range'))
+    #MSE = unreal.MovieSceneSectionExtensions()
+    #seqBindings[3].get_tracks()[0].get_sections()[0].set_range(0,200)
+    asset = unreal.EditorLevelLibrary.get_selected_level_actors()
+    print(asset[0])
+    trackingSettings = unreal.CameraLookatTrackingSettings()
+    trackingSettings.set_editor_property('enable_look_at_tracking',True)
+    trackingSettings.set_editor_property("actor_to_track",asset[1])
+    trackingSettings.set_editor_property('look_at_tracking_interp_speed',2)
+    asset[0].lookat_tracking_settings = trackingSettings
+    #al = seqBindings[2]
+    # aiBID = al.get_editor_property('binding_id')
+    # sections = seqBindings[3].get_tracks()[0].get_sections()
+    # compName = sections[0].get_editor_property('attach_component_name')
+    # cubeBID = sections[0].get_constraint_binding_id()
+    # # print(sections[0].get_editor_property('attach_socket_name'))
+    # print(f'name: {al.get_display_name()}, binding id:{al.get_binding_id()}')
+    # print(f'name:{type(sections[0])}, binding_id:{cubeBID}')
+
 def test():
     val = EAL.load_blueprint_class('/Game/MetaHumans/Valerie/BP_MH')
     alex = EAL.load_asset('/Game/anims/alexwboxes')
@@ -184,12 +270,3 @@ def test():
     anim_section.params.animation = EAL.load_asset('/Game/anims/anims/kick4_01')
 
     alexbind.set_parent(valbind)
-
-def assetWalk():
-    asset_reg = unreal.AssetRegistryHelpers.get_asset_registry()
-    all_anims = asset_reg.get_assets_by_path('/Game/anims/anims')
-    randomElement = random.choice(all_anims)
-    split_path = randomElement.get_full_name().split('.')
-    anim_path = "/"+split_path[1].split('/',1)[1]
-    anim_path = unreal.EditorAssetLibrary.load_asset(anim_path)
-    return anim_path

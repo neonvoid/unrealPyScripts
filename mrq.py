@@ -22,9 +22,20 @@ outputDir = os.path.abspath(os.path.join(unreal.Paths().project_dir(),'0'))
 
 def OnIndividualJobFinishedCallback(params,success):
     global fog
-    print('one job completed')
     fog[0].component.set_fog_inscattering_color((random.uniform(0,10),random.uniform(0,10),random.uniform(0,10)))
-    #spawnedLight.set_light_color((random.uniform(0,1),random.uniform(0,1),random.uniform(0,1),1))
+    asset_reg = unreal.AssetRegistryHelpers.get_asset_registry()
+    all_anims = asset_reg.get_assets_by_path('/Game/hdrs')
+    randomElement = random.choice(all_anims)
+    split_path = randomElement.get_full_name().split('.')
+    hdr_path = "/"+split_path[1].split('/',1)[1]
+    hdr_path = unreal.EditorAssetLibrary.load_asset(hdr_path)
+    ELL = unreal.EditorLevelLibrary()
+    actor = ELL.get_all_level_actors()
+    for actor in actor:
+        if actor.get_class().get_name()== 'HDRIBackdrop_C':
+            hdr = actor
+    print(hdr.get_editor_property('Cubemap'))
+    hdr.set_editor_property('Cubemap',hdr_path)
 
 
 def mvqDocument(paths,worlds):
@@ -78,8 +89,8 @@ def mvqDocument(paths,worlds):
 
 def render():
     print(worldVar)
-    renderWorldVar = worldVar[0]+worldVar[1]
-    renderPathVar = pathVar[0]+pathVar[1]
+    renderWorldVar = worldVar[0] #+worldVar[1]
+    renderPathVar = pathVar[0] #+pathVar[1]
     mvqDocument(renderPathVar,renderWorldVar)
 
 def fogColorChangeTest():
