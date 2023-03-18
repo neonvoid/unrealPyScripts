@@ -6,29 +6,6 @@ import csv
 
 ELL = unreal.EditorLevelLibrary()
 EAL = unreal.EditorAssetLibrary()
-def spawnSK(nums):
-    SK2filePath = EAL.load_asset('/Game/Characters/Mannequins/Meshes/SKM_Manny_Simple')
-    SKfilePath = EAL.load_asset('/Game/Characters/Mannequins/Meshes/SKM_Quinn_Simple')
-    for i in range(nums):
-        location=unreal.Vector(random.randrange(-1000,1000),random.randrange(-1000,1000),0.0)
-        rotation=unreal.Rotator(0.0,0.0,0.0)
-        if i%2==0:
-            ELL.spawn_actor_from_object(SKfilePath,location,rotation)
-        else:
-            ELL.spawn_actor_from_object(SK2filePath,location,rotation)
-
-def spawnMH(nums):
-    KeijiPath = EAL.load_blueprint_class('/Game/MetaHumans/Keiji/BP_MH')
-    ValPath = EAL.load_blueprint_class('/Game/MetaHumans/Valerie/BP_MH')
-    MHPaths = [KeijiPath,ValPath]
-    cycler=cycle(MHPaths) 
-    for i in range(nums):
-        location= unreal.Vector(random.randrange(-1000,1000),random.randrange(-1000,1000),0.0)
-        rotation= unreal.Rotator(0.0,0.0,0.0)
-        #ELL.spawn_actor_from_class(next(cycler),location,rotation)
-        
-    
-
 def spawnCam():
     cam = unreal.CineCameraActor().get_class()
     allActors = ELL.get_all_level_actors()
@@ -51,15 +28,17 @@ def spawnCam():
     return meshes, cams
 
 
-def createSequencer(nums):
+def createSequencer(nums,cameraDistance,queueSet):
 
     KeijiPath = EAL.load_blueprint_class('/Game/MetaHumans/Keiji/BP_Keiji')
     ValPath = EAL.load_blueprint_class('/Game/MetaHumans/Valerie/BP_Val')
     MylesPath = EAL.load_blueprint_class('/Game/MetaHumans/Myles/BP_Myles')
     OskarPath = EAL.load_blueprint_class('/Game/MetaHumans/Oskar/BP_Oskar')
     HudsonPath = EAL.load_blueprint_class('/Game/MetaHumans/Hudson/BP_Hudson')
+    LexiPath = EAL.load_blueprint_class('/Game/MetaHumans/Lexi/BP_Lexi')
+    VivianPath = EAL.load_blueprint_class('/Game/MetaHumans/Vivian/BP_Vivian')
 
-    mhpaths = [KeijiPath,ValPath,MylesPath,OskarPath,HudsonPath]
+    mhpaths = [KeijiPath,ValPath,MylesPath,OskarPath,HudsonPath,LexiPath,VivianPath]
     mhCycler = cycle(mhpaths)
 
     alex = EAL.load_asset('/Game/anims/alexwboxes')
@@ -78,20 +57,20 @@ def createSequencer(nums):
     # camRotation = unreal.Rotator(0,0,-90)
     # camSpawn = ELL.spawn_actor_from_class(cam,camLocation,camRotation,transient=False)
     
-    sequenceName = 'lvl_sequence' + '%d' +'%s'
+    sequenceName = 'lvl_sequence' + '%d' +'%d'#'%s'
     sequencerPaths = []
     sequencerWorlds = []
     #for i,(mesh,cam) in enumerate(zip(meshes,cams)):
     for i in range(nums):
         currWorld = alexspawn.get_world().get_name()
         assetTools = unreal.AssetToolsHelpers.get_asset_tools()
-        sequence = assetTools.create_asset(asset_name=sequenceName%(i,currWorld),
+        sequence = assetTools.create_asset(asset_name=sequenceName%(i,queueSet),
                                             package_path='/Game/sequences/',
                                             asset_class=unreal.LevelSequence,
                                             factory=unreal.LevelSequenceFactoryNew())
         randStart = random.randrange(40,150)
         sequence.set_playback_start(randStart)
-        sequence.set_playback_end(randStart+50)
+        sequence.set_playback_end(randStart+30)
         #adding the mesh into the sequencer
         mesh_binding = sequence.add_spawnable_from_instance(next(mhCycler))
         alex_binding = sequence.add_possessable(alexspawn)
@@ -108,7 +87,7 @@ def createSequencer(nums):
         # camLoc.z += random.randrange(-55,55)
         # camLoc.x += random.randrange(-35,35)
         # camSpawnLoop = ELL.spawn_actor_from_object(camSpawn,camLoc,camRotation)
-        camSpawn = randomCircleSpawn(300)
+        camSpawn = randomCircleSpawn(cameraDistance+random.randrange(-30,30))
         camera_binding = sequence.add_possessable(camSpawn)
         alex_binding.set_parent(mesh_binding)
 
@@ -152,15 +131,6 @@ def createSequencer(nums):
     #it returns a moviescenetrack object
 
     #movieSceneSequence also has a add_master_track method with asks for a umoviescenetrack class and returns moviescene track
-
-#rendering the movie out to the saved dir with default capture settings
-def render(sequencer):
-    for sequencer in sequencer:
-        capture_settings = unreal.AutomatedLevelSequenceCapture()
-        capture_settings.level_sequence_asset = unreal.SoftObjectPath(sequencer)
-        capture_settings.get_editor_property('settings').set_editor_property('output_format','{world}{sequence}')
-
-        unreal.SequencerTools.render_movie(capture_settings,unreal.OnRenderMovieStopped())
         
 def levelTravel():
     ELL.save_current_level()
@@ -171,10 +141,11 @@ def levelTravel():
     else:
         ELL.load_level('/Game/PythonEmptyTest')
 
-def main(params):
+def main(*params):
+    seqNum,camDist,qs = params
     #spawnMH(params)
     #meshes,cams = spawnCam()
-    seqpaths, seqworlds = createSequencer(params)
+    seqpaths, seqworlds = createSequencer(seqNum,camDist,qs)
     return seqpaths,seqworlds
 
 
@@ -225,6 +196,22 @@ def alignTracking():
         trackingSettings.set_editor_property("actor_to_track",attach)
         trackingSettings.set_editor_property('look_at_tracking_interp_speed',2)
         cam.lookat_tracking_settings = trackingSettings
+
+def randomizeExposure():
+    allCams = []
+    allactors = unreal.EditorLevelLibrary().get_all_level_actors()
+    for actor in allactors:
+        if actor.get_class().get_name() == 'CineCameraActor':
+            allCams.append(actor)
+    
+    for cam in allCams:
+        pps = cam.get_cine_camera_component().get_editor_property('post_process_settings')
+        pps.set_editor_property('override_auto_exposure_method',True)
+        pps.set_editor_property('auto_exposure_method',unreal.AutoExposureMethod.AEM_MANUAL)
+        pps.set_editor_property('override_auto_exposure_bias',True)
+        pps.set_editor_property('auto_exposure_bias',random.uniform(4.5,12))
+
+
 
 def CameraPosDump():
     AllCams= unreal.EditorLevelLibrary.get_all_level_actors()
@@ -287,3 +274,36 @@ def test():
     anim_section.params.animation = EAL.load_asset('/Game/anims/anims/kick4_01')
 
     alexbind.set_parent(valbind)
+
+    #rendering the movie out to the saved dir with default capture settings
+def render(sequencer):
+    for sequencer in sequencer:
+        capture_settings = unreal.AutomatedLevelSequenceCapture()
+        capture_settings.level_sequence_asset = unreal.SoftObjectPath(sequencer)
+        capture_settings.get_editor_property('settings').set_editor_property('output_format','{world}{sequence}')
+
+        unreal.SequencerTools.render_movie(capture_settings,unreal.OnRenderMovieStopped())
+
+
+def spawnSK(nums):
+    SK2filePath = EAL.load_asset('/Game/Characters/Mannequins/Meshes/SKM_Manny_Simple')
+    SKfilePath = EAL.load_asset('/Game/Characters/Mannequins/Meshes/SKM_Quinn_Simple')
+    for i in range(nums):
+        location=unreal.Vector(random.randrange(-1000,1000),random.randrange(-1000,1000),0.0)
+        rotation=unreal.Rotator(0.0,0.0,0.0)
+        if i%2==0:
+            ELL.spawn_actor_from_object(SKfilePath,location,rotation)
+        else:
+            ELL.spawn_actor_from_object(SK2filePath,location,rotation)
+
+def spawnMH(nums):
+    KeijiPath = EAL.load_blueprint_class('/Game/MetaHumans/Keiji/BP_MH')
+    ValPath = EAL.load_blueprint_class('/Game/MetaHumans/Valerie/BP_MH')
+    MHPaths = [KeijiPath,ValPath]
+    cycler=cycle(MHPaths) 
+    for i in range(nums):
+        location= unreal.Vector(random.randrange(-1000,1000),random.randrange(-1000,1000),0.0)
+        rotation= unreal.Rotator(0.0,0.0,0.0)
+        #ELL.spawn_actor_from_class(next(cycler),location,rotation)
+        
+    

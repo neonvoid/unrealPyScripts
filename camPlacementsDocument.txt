@@ -21,3 +21,17 @@ Default:
         location.x += random.randrange(-100,100)
         rotation = unreal.Rotator(0,0,-90)
 	
+
+
+Shot IDs 2nd CNN:
+83 generations for around 2500 frames 
+30fps
+
+extreme closeup [0]
+	~90
+closeup [1]
+	~300
+medium [2]
+	~700
+wide[3]
+	~1400
