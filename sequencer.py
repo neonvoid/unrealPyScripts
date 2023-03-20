@@ -57,20 +57,20 @@ def createSequencer(nums,cameraDistance,queueSet):
     # camRotation = unreal.Rotator(0,0,-90)
     # camSpawn = ELL.spawn_actor_from_class(cam,camLocation,camRotation,transient=False)
     
-    sequenceName = 'lvl_sequence' + '%d' +'%d'#'%s'
+    sequenceName = 'lvl_sequence' + '%d' #+'%d'#'%s'
     sequencerPaths = []
     sequencerWorlds = []
     #for i,(mesh,cam) in enumerate(zip(meshes,cams)):
     for i in range(nums):
         currWorld = alexspawn.get_world().get_name()
         assetTools = unreal.AssetToolsHelpers.get_asset_tools()
-        sequence = assetTools.create_asset(asset_name=sequenceName%(i,queueSet),
+        sequence = assetTools.create_asset(asset_name=sequenceName%(i),
                                             package_path='/Game/sequences/',
                                             asset_class=unreal.LevelSequence,
                                             factory=unreal.LevelSequenceFactoryNew())
         randStart = random.randrange(40,150)
         sequence.set_playback_start(randStart)
-        sequence.set_playback_end(randStart+30)
+        sequence.set_playback_end(randStart+15)
         #adding the mesh into the sequencer
         mesh_binding = sequence.add_spawnable_from_instance(next(mhCycler))
         alex_binding = sequence.add_possessable(alexspawn)
@@ -87,7 +87,7 @@ def createSequencer(nums,cameraDistance,queueSet):
         # camLoc.z += random.randrange(-55,55)
         # camLoc.x += random.randrange(-35,35)
         # camSpawnLoop = ELL.spawn_actor_from_object(camSpawn,camLoc,camRotation)
-        camSpawn = randomCircleSpawn(cameraDistance+random.randrange(-30,30))
+        camSpawn = randomCircleSpawn(cameraDistance)#+random.randrange(-5,5))
         camera_binding = sequence.add_possessable(camSpawn)
         alex_binding.set_parent(mesh_binding)
 

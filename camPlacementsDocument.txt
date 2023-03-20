@@ -35,3 +35,26 @@ medium [2]
 	~700
 wide[3]
 	~1400
+
+
+Shot IDs 3rd CNN:
+
+changing things up, set per sequence 15 frames at 30 fps
+150 samples per data chunk
+
+extreme closeup [0]
+	~40,60
+
+closeup [1]
+	~100, 120
+
+mcu [2]
+	~350.400
+
+wode[3]
+	~1000,1300
+
+potential issues:
+	camera doesn't follow the actor physically, if a mh moves during mocap movement the camera offset distance wont be accurate anymore
+	rendering setup still doesn't work well one after another, curr requires one to close down the project and retstart between scene gens
+	

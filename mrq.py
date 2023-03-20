@@ -19,7 +19,7 @@ def create(*args):
 executor = None
 spawnedLight = None
 fog = None
-outputDir = os.path.abspath(os.path.join(unreal.Paths().project_dir(),'3'))
+#outputDir = os.path.abspath(os.path.join(unreal.Paths().project_dir(),'test'))
 
 def OnIndividualJobFinishedCallback(params,success):
     global fog
@@ -48,11 +48,14 @@ def OnIndividualJobFinishedCallback(params,success):
     lights[0].get_editor_property('PointLightComponent').set_editor_property('relative_location',randomLoc)
     lights[1].get_editor_property('PointLightComponent').set_editor_property('relative_location',randomLoc2)
 
+def OnMoviePipelineExecutorFinished(exec,succ):
+    emptyQ()
 
-
-def mvqDocument(paths,worlds):
+def mvqDocument(paths,worlds,folder):
+    dataout= 'data/'+folder
+    outputDir = os.path.abspath(os.path.join(unreal.Paths().project_dir(),dataout))
     subsystem = unreal.get_editor_subsystem(unreal.MoviePipelineQueueSubsystem)
-    ELL = unreal.EditorLevelLibrary()
+    #ELL = unreal.EditorLevelLibrary()
     queue = subsystem.get_queue()
     # print(queue)
     # print(queue.get_jobs())
@@ -88,17 +91,22 @@ def mvqDocument(paths,worlds):
 
     global executor
     executor = unreal.MoviePipelinePIEExecutor()
-    callback = unreal.OnMoviePipelineIndividualJobFinished()
-    callback.add_callable(OnIndividualJobFinishedCallback)
-    executor.set_editor_property('on_individual_job_finished_delegate',callback)
+    jcallback = unreal.OnMoviePipelineIndividualJobFinished()
+    jcallback.add_callable(OnIndividualJobFinishedCallback)
+    ecallback = unreal.OnMoviePipelineExecutorFinished()
+    ecallback.add_callable(OnMoviePipelineExecutorFinished)
+    executor.set_editor_property('on_individual_job_finished_delegate',jcallback)
+    executor.set_editor_property('on_executor_finished_delegate',ecallback)
     subsystem.render_queue_with_executor_instance(executor)
+
+
 def execute():
     subsystem = unreal.get_editor_subsystem(unreal.MoviePipelineQueueSubsystem)
     global executor
     executor = unreal.MoviePipelinePIEExecutor()
-    callback = unreal.OnMoviePipelineIndividualJobFinished()
-    callback.add_callable(OnIndividualJobFinishedCallback)
-    executor.set_editor_property('on_individual_job_finished_delegate',callback)
+    Jobcallback = unreal.OnMoviePipelineIndividualJobFinished()
+    Jobcallback.add_callable(OnIndividualJobFinishedCallback)
+    executor.set_editor_property('on_individual_job_finished_delegate',Jobcallback)
     subsystem.render_queue_with_executor_instance(executor)
     
     # what are soft object paths
@@ -109,16 +117,17 @@ def execute():
 def emptyQ():
     subsystem = unreal.get_editor_subsystem(unreal.MoviePipelineQueueSubsystem)
     queue = subsystem.get_queue()
+    print(queue.get_jobs())
     qJobs = queue.get_jobs()
     for job in qJobs:
         queue.delete_job(job)
     print(queue.get_jobs())
 
-def render():
+def render(folder):
     print(worldVar)
     renderWorldVar = worldVar[0] #+worldVar[1]
     renderPathVar = pathVar[0] #+pathVar[1]
-    mvqDocument(renderPathVar,renderWorldVar)
+    mvqDocument(renderPathVar,renderWorldVar,folder)
 
 def fogColorChangeTest():
     # ELL = unreal.EditorLevelLibrary()
