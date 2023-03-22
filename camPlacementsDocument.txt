@@ -57,4 +57,20 @@ wode[3]
 potential issues:
 	camera doesn't follow the actor physically, if a mh moves during mocap movement the camera offset distance wont be accurate anymore
 	rendering setup still doesn't work well one after another, curr requires one to close down the project and retstart between scene gens
+
+fix up data set
+try to speed up performance or raise frame rate
+
+have like a mock up demo thing in unreal prepared
+
+SHOT IDs for 4th CNN:
+ cl[0]:
+	 40,70
+
+medium[1]:
+	400,500
+
+wide[2]:
+	1100,1300
+
 	

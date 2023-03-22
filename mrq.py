@@ -41,8 +41,8 @@ def OnIndividualJobFinishedCallback(params,success):
 
     #print(hdr.get_editor_property('Cubemap'))
     hdr.set_editor_property('Cubemap',hdr_path)
-    lights[0].get_editor_property('PointLightComponent').set_editor_property('intensity',random.randrange(0,50))
-    lights[1].get_editor_property('PointLightComponent').set_editor_property('intensity',random.randrange(5,60))
+    lights[0].get_editor_property('PointLightComponent').set_editor_property('intensity',random.randrange(25,100))
+    lights[1].get_editor_property('PointLightComponent').set_editor_property('intensity',random.randrange(25,100))
     randomLoc= unreal.Vector(random.randrange(-400,400),random.randrange(-250,250),random.randrange(20,300))
     randomLoc2= unreal.Vector(random.randrange(-400,400),random.randrange(-250,250),random.randrange(20,300))
     lights[0].get_editor_property('PointLightComponent').set_editor_property('relative_location',randomLoc)
@@ -74,7 +74,7 @@ def mvqDocument(paths,worlds,folder):
         render_pass = jobConfig.find_or_add_setting_by_class(unreal.MoviePipelineDeferredPassBase)
         output_setting = jobConfig.find_or_add_setting_by_class(unreal.MoviePipelineOutputSetting)
         output_setting.output_directory = unreal.DirectoryPath(outputDir)
-        output_setting.output_resolution = (100,100)
+        output_setting.output_resolution = (256,256)
         png_output = jobConfig.find_or_add_setting_by_class(unreal.MoviePipelineImageSequenceOutput_PNG)
 
     # global spawnedLight
@@ -164,3 +164,4 @@ def fogColorChangeTest():
     randomLoc2= unreal.Vector(random.randrange(-400,400),random.randrange(-250,250),random.randrange(20,300))
     lights[0].get_editor_property('PointLightComponent').set_editor_property('relative_location',randomLoc)
     lights[1].get_editor_property('PointLightComponent').set_editor_property('relative_location',randomLoc2)
+

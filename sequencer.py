@@ -70,7 +70,7 @@ def createSequencer(nums,cameraDistance,queueSet):
                                             factory=unreal.LevelSequenceFactoryNew())
         randStart = random.randrange(40,150)
         sequence.set_playback_start(randStart)
-        sequence.set_playback_end(randStart+15)
+        sequence.set_playback_end(randStart+100)
         #adding the mesh into the sequencer
         mesh_binding = sequence.add_spawnable_from_instance(next(mhCycler))
         alex_binding = sequence.add_possessable(alexspawn)
@@ -82,7 +82,7 @@ def createSequencer(nums,cameraDistance,queueSet):
         cubeAttachSection = cubeAttachTrack.add_section()
         cubeAttachSection.set_editor_property('constraint_binding_id',alex_bindingTrack.get_binding_id())
         cubeAttachSection.set_editor_property('attach_component_name',"SkeletalMesh")
-        cubeAttachSection.set_editor_property('attach_socket_name',"Alex_neck")
+        cubeAttachSection.set_editor_property('attach_socket_name',"Alex_Spine1")
         # camLoc = camSpawn.get_actor_location()
         # camLoc.z += random.randrange(-55,55)
         # camLoc.x += random.randrange(-35,35)
@@ -179,6 +179,7 @@ def randomCircleSpawn(distance_offset):
     #cam.set_editor_property('lookat_tracking_settings',trackingSettings)
     camSpawn = unreal.EditorLevelLibrary().spawn_actor_from_object(cam,camLoc,camRot)
     return camSpawn
+    #return camLoc,camRot
 
 def alignTracking():
     allCams = []
@@ -194,8 +195,10 @@ def alignTracking():
         trackingSettings = unreal.CameraLookatTrackingSettings()
         trackingSettings.set_editor_property('enable_look_at_tracking',True)
         trackingSettings.set_editor_property("actor_to_track",attach)
-        trackingSettings.set_editor_property('look_at_tracking_interp_speed',2)
+        trackingSettings.set_editor_property('look_at_tracking_interp_speed',25)
         cam.lookat_tracking_settings = trackingSettings
+
+    
 
 def randomizeExposure():
     allCams = []
@@ -204,12 +207,19 @@ def randomizeExposure():
         if actor.get_class().get_name() == 'CineCameraActor':
             allCams.append(actor)
     
+    
     for cam in allCams:
         pps = cam.get_cine_camera_component().get_editor_property('post_process_settings')
+        fs = cam.get_cine_camera_component().get_editor_property('focus_settings')
+        fb = cam.get_cine_camera_component().get_editor_property('filmback')
         pps.set_editor_property('override_auto_exposure_method',True)
         pps.set_editor_property('auto_exposure_method',unreal.AutoExposureMethod.AEM_MANUAL)
         pps.set_editor_property('override_auto_exposure_bias',True)
-        pps.set_editor_property('auto_exposure_bias',random.uniform(4.5,12))
+        pps.set_editor_property('auto_exposure_bias',random.uniform(8,12))
+        fs.set_editor_property('focus_method',unreal.CameraFocusMethod.DISABLE)
+        fb.set_editor_property('sensor_width',12.52)
+        fb.set_editor_property('sensor_height',7.58)
+
 
 
 
@@ -307,3 +317,48 @@ def spawnMH(nums):
         #ELL.spawn_actor_from_class(next(cycler),location,rotation)
         
     
+def timetest():
+    world = unreal.UnrealEditorSubsystem().get_game_world()
+    gps = unreal.GameplayStatics()
+    gps.set_global_time_dilation(world,5)
+
+def etest():
+    level_actors = unreal.EditorLevelLibrary.get_all_level_actors()
+    character_actor = None
+    for actor in level_actors:
+        if actor.get_class().get_name() == "BP_Lexi_C":
+            character_actor = actor
+            break 
+    comps = character_actor.root_component.get_children_components(True)
+    cam = None
+    for c in comps:
+        if c.get_name() == "CineCamera":
+            cam = c
+    camLoc,camRot = randomCircleSpawn(80)
+    print(camLoc)
+    cam.set_world_rotation(unreal.Rotator(0,0,-85),False,False)
+    cam.set_world_location(camLoc,False,False)
+
+    at = unreal.AssetToolsHelpers.get_asset_tools()
+    seq = at.create_asset(
+        asset_name= 'test',
+        package_path='/Game/Sequences',
+        asset_class=unreal.LevelSequence,
+        factory=unreal.LevelSequenceFactoryNew(),
+    )
+    lex_bind = seq.add_possessable(character_actor)
+    anim_bind = None
+    for comp in comps:
+        if comp.get_name() == 'alexwboxes':
+            anim_bind = seq.add_possessable(comp)
+            anim_bind.set_parent(lex_bind)
+        elif comp.get_name() == 'CineCamera':
+            cam_bind = seq.add_possessable(comp)
+            cam_bind.set_parent(lex_bind)
+        else:
+            track = seq.add_possessable(comp)
+            track.set_parent(lex_bind)
+    anim_track = lex_bind.add_track(unreal.MovieSceneSkeletalAnimationTrack)
+    anim_section = anim_track.add_section()
+    anim_section.params.animation = unreal.EditorAssetLibrary.load_asset('/Game/anims/anims/kick4_01')
+    anim_section.set_range(0,seq.get_playback_end())
