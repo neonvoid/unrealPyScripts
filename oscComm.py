@@ -6,17 +6,16 @@ import tensorflow as tf
 import numpy as np
 import os
 
-
 cats = ['closeup','medium','wide']
 ip = '127.0.0.1'
 recievePort = 8000
 outputPort = 7000
 
 #load model
-model = tf.keras.models.load_model('osc/4thsynDataCNN.keras')
+model = tf.keras.models.load_model('osc/thirdcnn.keras')
 
 def prep(filepath):
-    img_size=256
+    img_size=100
     img=cv2.imread(filepath,cv2.IMREAD_COLOR)
     if img is None:
         print(f'no image, path:{filepath}')

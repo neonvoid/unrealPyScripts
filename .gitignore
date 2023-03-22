@@ -2,3 +2,5 @@ __pycache__/
 FindAndReplace.py
 mrqRefFromForum.py
 creds.py
+osc/
+camChoices.csv
