@@ -38,7 +38,7 @@ def createSequencer(nums,cameraDistance,queueSet):
     LexiPath = EAL.load_blueprint_class('/Game/MetaHumans/Lexi/BP_Lexi')
     VivianPath = EAL.load_blueprint_class('/Game/MetaHumans/Vivian/BP_Vivian')
 
-    mhpaths = [KeijiPath,ValPath,MylesPath,OskarPath,HudsonPath,LexiPath,VivianPath]
+    mhpaths = [MylesPath,OskarPath]#[KeijiPath,ValPath,MylesPath,OskarPath,HudsonPath,LexiPath,VivianPath]
     mhCycler = cycle(mhpaths)
 
     alex = EAL.load_asset('/Game/anims/alexwboxes')
@@ -70,7 +70,7 @@ def createSequencer(nums,cameraDistance,queueSet):
                                             factory=unreal.LevelSequenceFactoryNew())
         randStart = random.randrange(40,150)
         sequence.set_playback_start(randStart)
-        sequence.set_playback_end(randStart+100)
+        sequence.set_playback_end(randStart+30)
         #adding the mesh into the sequencer
         mesh_binding = sequence.add_spawnable_from_instance(next(mhCycler))
         alex_binding = sequence.add_possessable(alexspawn)
@@ -82,7 +82,7 @@ def createSequencer(nums,cameraDistance,queueSet):
         cubeAttachSection = cubeAttachTrack.add_section()
         cubeAttachSection.set_editor_property('constraint_binding_id',alex_bindingTrack.get_binding_id())
         cubeAttachSection.set_editor_property('attach_component_name',"SkeletalMesh")
-        cubeAttachSection.set_editor_property('attach_socket_name',"Alex_Spine1")
+        cubeAttachSection.set_editor_property('attach_socket_name',"Alex_Head")
         # camLoc = camSpawn.get_actor_location()
         # camLoc.z += random.randrange(-55,55)
         # camLoc.x += random.randrange(-35,35)
@@ -131,7 +131,7 @@ def createSequencer(nums,cameraDistance,queueSet):
     #it returns a moviescenetrack object
 
     #movieSceneSequence also has a add_master_track method with asks for a umoviescenetrack class and returns moviescene track
-        
+     
 def levelTravel():
     ELL.save_current_level()
     currLev = ELL.get_editor_world().get_name()
@@ -212,10 +212,10 @@ def randomizeExposure():
         pps = cam.get_cine_camera_component().get_editor_property('post_process_settings')
         fs = cam.get_cine_camera_component().get_editor_property('focus_settings')
         fb = cam.get_cine_camera_component().get_editor_property('filmback')
-        pps.set_editor_property('override_auto_exposure_method',True)
-        pps.set_editor_property('auto_exposure_method',unreal.AutoExposureMethod.AEM_MANUAL)
-        pps.set_editor_property('override_auto_exposure_bias',True)
-        pps.set_editor_property('auto_exposure_bias',random.uniform(8,12))
+        # pps.set_editor_property('override_auto_exposure_method',True)
+        # pps.set_editor_property('auto_exposure_method',unreal.AutoExposureMethod.AEM_MANUAL)
+        # pps.set_editor_property('override_auto_exposure_bias',True)
+        # pps.set_editor_property('auto_exposure_bias',random.uniform(8,12))
         fs.set_editor_property('focus_method',unreal.CameraFocusMethod.DISABLE)
         fb.set_editor_property('sensor_width',12.52)
         fb.set_editor_property('sensor_height',7.58)

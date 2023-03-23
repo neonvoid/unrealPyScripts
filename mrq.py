@@ -72,9 +72,10 @@ def mvqDocument(paths,worlds,folder):
 
         jobConfig = job.get_configuration()
         render_pass = jobConfig.find_or_add_setting_by_class(unreal.MoviePipelineDeferredPassBase)
+
         output_setting = jobConfig.find_or_add_setting_by_class(unreal.MoviePipelineOutputSetting)
         output_setting.output_directory = unreal.DirectoryPath(outputDir)
-        output_setting.output_resolution = (256,256)
+        output_setting.output_resolution = (100,100)
         png_output = jobConfig.find_or_add_setting_by_class(unreal.MoviePipelineImageSequenceOutput_PNG)
 
     # global spawnedLight
@@ -91,11 +92,11 @@ def mvqDocument(paths,worlds,folder):
 
     global executor
     executor = unreal.MoviePipelinePIEExecutor()
-    jcallback = unreal.OnMoviePipelineIndividualJobFinished()
-    jcallback.add_callable(OnIndividualJobFinishedCallback)
+    # jcallback = unreal.OnMoviePipelineIndividualJobFinished()
+    # jcallback.add_callable(OnIndividualJobFinishedCallback)
     ecallback = unreal.OnMoviePipelineExecutorFinished()
     ecallback.add_callable(OnMoviePipelineExecutorFinished)
-    executor.set_editor_property('on_individual_job_finished_delegate',jcallback)
+    #executor.set_editor_property('on_individual_job_finished_delegate',jcallback)
     executor.set_editor_property('on_executor_finished_delegate',ecallback)
     subsystem.render_queue_with_executor_instance(executor)
 

@@ -96,7 +96,7 @@ def alignTracking():
 
 def alexAnims():   
     asset_reg = unreal.AssetRegistryHelpers.get_asset_registry()
-    all_anims = asset_reg.get_assets_by_path('/Game/alex/anims')
+    all_anims = asset_reg.get_assets_by_path('/Game/alex2/standingAnims')
     randomElement = random.choice(all_anims)
     split_path = randomElement.get_full_name().split('.')
     anim_path = "/"+split_path[1].split('/',1)[1]

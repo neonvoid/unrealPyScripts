@@ -12,7 +12,7 @@ recievePort = 8000
 outputPort = 7000
 
 #load model
-model = tf.keras.models.load_model('osc/thirdcnn.keras')
+model = tf.keras.models.load_model('osc/fifthCNN.keras')
 
 def prep(filepath):
     img_size=100
@@ -32,7 +32,7 @@ def prep(filepath):
 
 def fromUnreal(address,msg):
     #print('msg recieved from unreal')
-    fp = "osc/oscTests/ss"+ str(msg) +".png"
+    fp = "osc/oscTests/"+ msg +".png"
     print(fp)
     pred = model.predict(prep(fp))
     frame=cats[np.argmax(pred)]
