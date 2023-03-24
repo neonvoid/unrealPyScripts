@@ -183,6 +183,54 @@ def alexAnims():
 #         shot = shotsection.set_sequence(seqload)
 #     unreal.LevelSequenceEditorBlueprintLibrary.open_level_sequence(masterseq)
 
+def makeFilmBasedOnUserCamLoc():
+    allactors = unreal.EditorLevelLibrary().get_all_level_actors()
+    alex = None
+    for actor in allactors:
+        if actor.get_class().get_name()=='SkeletalMeshActor':
+            alex = actor
+
+    at = unreal.AssetToolsHelpers.get_asset_tools()
+    camposarray = readingCamPosCSV()
+    masterseq = at.create_asset(
+            asset_name= 'userFilm',
+            package_path='/Game/2ndSeq',
+            asset_class=unreal.LevelSequence,
+            factory=unreal.LevelSequenceFactoryNew(),
+        )
+    playback_start = 0
+    playback_end = 600
+    masterseq.set_playback_start(playback_start)
+    masterseq.set_playback_end(playback_end)
+
+    alex_bind = masterseq.add_possessable(alex)
+    anim_track = alex_bind.add_track(unreal.MovieSceneSkeletalAnimationTrack)
+    anim_section = anim_track.add_section()
+    anim_section.set_range(playback_start,playback_end)
+    alexAnim3Shot = unreal.EditorAssetLibrary().load_asset('/Game/alex2/alex3/alex3Anims/alexrig_multiact_test1')
+    anim_section.params.animation= alexAnim3Shot
+    
+    cameracutsTrack = masterseq.add_master_track(unreal.MovieSceneCameraCutTrack)
+    shotlength = playback_end/len(camposarray)
+    start = 0
+    for i in range(len(camposarray)):
+        cam = unreal.CineCameraActor()
+        end = start+shotlength
+        camLoc = unreal.Vector(float(camposarray[i][0]),float(camposarray[i][1]),float(camposarray[i][2]))
+        cam = unreal.EditorLevelLibrary().spawn_actor_from_object(cam,camLoc,unreal.Rotator(0,0,0))
+        cam_binding = masterseq.add_possessable(cam)
+        cameracutsSection = cameracutsTrack.add_section()
+        cameracutsSection.set_range(start,end)
+
+        camBindingID = unreal.MovieSceneObjectBindingID()
+        camBindingID.set_editor_property('guid',cam_binding.get_id())
+        cameracutsSection.set_camera_binding_id(camBindingID)
+
+        start=end
+
+    alignTracking()
+    unreal.LevelSequenceEditorBlueprintLibrary.open_level_sequence(masterseq)
+
 def makeFinalFilmBasedOnShotList():
     allactors = unreal.EditorLevelLibrary().get_all_level_actors()
     alex = None
@@ -195,7 +243,7 @@ def makeFinalFilmBasedOnShotList():
     del shotlist[-1]
     
     masterseq = at.create_asset(
-            asset_name= 'finalFilm',
+            asset_name= 'cnnFilm',
             package_path='/Game/2ndSeq',
             asset_class=unreal.LevelSequence,
             factory=unreal.LevelSequenceFactoryNew(),
@@ -229,6 +277,7 @@ def makeFinalFilmBasedOnShotList():
         start=end
 
     alignTracking()
+    unreal.LevelSequenceEditorBlueprintLibrary.open_level_sequence(masterseq)
 
 def randomCam2(str):
     cam=unreal.CineCameraActor()
@@ -261,3 +310,15 @@ def readingShotTypes():
 
     shotlist = shots.split(',')
     return shotlist
+
+def readingCamPosCSV():
+    campos = []
+    splitcampos = []
+    with open('D:\python_unreal\ThesisTestsStuff\camChoices.csv','r') as f:
+        camchoicespos = csv.reader(f,delimiter=',')
+        next(camchoicespos)
+        for row in f:
+            campos.append(row)
+        for pos in campos:
+            splitcampos.append(pos.strip().split(','))
+    return splitcampos

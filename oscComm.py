@@ -5,6 +5,7 @@ import cv2
 import tensorflow as tf
 import numpy as np
 import os
+import csv
 
 cats = ['closeup','medium','wide']
 ip = '127.0.0.1'
@@ -34,10 +35,18 @@ def fromUnreal(address,msg):
     with open ('shotTypes.txt','a') as f:
         f.write(frame)
 
-
+def fromUnrealCam(add,msg):
+    fp = msg
+    split = fp.split(',')
+    loc=[split[0],split[1],split[2]]
+    with open('camChoices.csv','a',newline=('')) as f:
+         writer = csv.writer(f)
+         writer.writerow(loc)
+         
 #catches messages
 dispatcher = dispatcher.Dispatcher()
 dispatcher.map('/fromUnreal',fromUnreal)
+dispatcher.map('/fromUnrealCam',fromUnrealCam)
 # dispatcher.map('/fromMax',fromMax)
 
 #client
