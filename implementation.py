@@ -207,7 +207,7 @@ def makeFilmBasedOnUserCamLoc():
     anim_track = alex_bind.add_track(unreal.MovieSceneSkeletalAnimationTrack)
     anim_section = anim_track.add_section()
     anim_section.set_range(playback_start,playback_end)
-    alexAnim3Shot = unreal.EditorAssetLibrary().load_asset('/Game/alex2/alex3/alex3Anims/alexrig_multiact_test1')
+    alexAnim3Shot = unreal.EditorAssetLibrary().load_asset('/Game/alex2/alex3/chainedAnimDemo')
     anim_section.params.animation= alexAnim3Shot
     
     cameracutsTrack = masterseq.add_master_track(unreal.MovieSceneCameraCutTrack)
@@ -257,13 +257,24 @@ def makeFinalFilmBasedOnShotList():
     anim_track = alex_bind.add_track(unreal.MovieSceneSkeletalAnimationTrack)
     anim_section = anim_track.add_section()
     anim_section.set_range(playback_start,playback_end)
-    alexAnim3Shot = unreal.EditorAssetLibrary().load_asset('/Game/alex2/alex3/alex3Anims/alexrig_multiact_test1')
+    alexAnim3Shot = unreal.EditorAssetLibrary().load_asset('/Game/alex2/alex3/chainedAnimDemo')
     anim_section.params.animation= alexAnim3Shot
     
     cameracutsTrack = masterseq.add_master_track(unreal.MovieSceneCameraCutTrack)
     shotlength = playback_end/len(shotlist)
     start = 0
+
+    cl=0
+    m=0
+    w=0
+
     for i in range(len(shotlist)):
+        if shotlist[i]=='closeup':
+            cl+=1
+        elif shotlist[i] =='medium':
+            m+=1
+        elif shotlist[i]=='wide':
+            w+=1
         end = start+shotlength
         cam = randomCam2(shotlist[i])
         cam_binding = masterseq.add_possessable(cam)
@@ -278,6 +289,7 @@ def makeFinalFilmBasedOnShotList():
 
     alignTracking()
     unreal.LevelSequenceEditorBlueprintLibrary.open_level_sequence(masterseq)
+    print(cl,m,w)
 
 def randomCam2(str):
     cam=unreal.CineCameraActor()
