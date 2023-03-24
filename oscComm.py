@@ -12,7 +12,7 @@ recievePort = 8000
 outputPort = 7000
 
 #load model
-model = tf.keras.models.load_model('osc/fifthCNN.keras')
+model = tf.keras.models.load_model('osc/addedDataCNN.keras')
 
 def prep(filepath):
     img_size=100
@@ -23,22 +23,15 @@ def prep(filepath):
         resized = cv2.resize(img,(img_size,img_size))
         return resized.reshape(-1,img_size,img_size,3)
 
-# def fromMax(address,*args):
-#     print('msg recieved from max')
-#     # pred = model.predict(prep('testingSS/3.png'))
-#     # print(cats[np.argmax(pred)])
-#     print(args[0])
-
-
 def fromUnreal(address,msg):
     #print('msg recieved from unreal')
     fp = "osc/oscTests/"+ msg +".png"
     print(fp)
     pred = model.predict(prep(fp))
-    frame=cats[np.argmax(pred)]
+    frame=cats[np.argmax(pred)]+','
     print(frame)
     #client.send_message('/fromVS',frame)
-    with open ('shotTypes.txt','w') as f:
+    with open ('shotTypes.txt','a') as f:
         f.write(frame)
 
 
@@ -55,3 +48,10 @@ client = SimpleUDPClient(ip,outputPort)
 server = osc_server.BlockingOSCUDPServer((ip,recievePort),dispatcher)
 print(f"server listening on {server.server_address}")
 server.serve_forever()
+
+# def fromMax(address,*args):
+#     print('msg recieved from max')
+#     # pred = model.predict(prep('testingSS/3.png'))
+#     # print(cats[np.argmax(pred)])
+#     print(args[0])
+

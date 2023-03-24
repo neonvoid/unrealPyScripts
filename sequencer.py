@@ -38,7 +38,7 @@ def createSequencer(nums,cameraDistance,queueSet):
     LexiPath = EAL.load_blueprint_class('/Game/MetaHumans/Lexi/BP_Lexi')
     VivianPath = EAL.load_blueprint_class('/Game/MetaHumans/Vivian/BP_Vivian')
 
-    mhpaths = [MylesPath,OskarPath]#[KeijiPath,ValPath,MylesPath,OskarPath,HudsonPath,LexiPath,VivianPath]
+    mhpaths = [HudsonPath,LexiPath]#[MylesPath,OskarPath]#[KeijiPath,ValPath,MylesPath,OskarPath,HudsonPath,LexiPath,VivianPath]
     mhCycler = cycle(mhpaths)
 
     alex = EAL.load_asset('/Game/anims/alexwboxes')
